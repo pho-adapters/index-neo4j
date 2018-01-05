@@ -15,6 +15,7 @@ use Pho\Kernel\Kernel;
 use Pho\Kernel\Services\ServiceInterface;
 use Pho\Kernel\Services\Index\IndexInterface;
 use Pho\Lib\Graph\EntityInterface;
+use GraphAware\Neo4j\Client\ClientBuilder;
 
 /**
  * Neo4j indexing adapter
@@ -30,16 +31,10 @@ class Neo4j implements IndexInterface, ServiceInterface
     protected $kernel;
 
     /**
-     * Neo4j DB
+     * Neo4J Client
      * @var \Elasticsearch\Client
      */
-    protected $db;
-
-    /**
-     * default index name for pho-indexing
-     * @var string
-     */
-//    private $dbname    = 'phonetworks';
+    protected $client;
 
 
     /**
@@ -51,6 +46,8 @@ class Neo4j implements IndexInterface, ServiceInterface
     public function __construct(Kernel $kernel, array $params = [])
     {
         $this->kernel = $kernel;
+     
+        
         // connect
         // set up listeners to index
 
