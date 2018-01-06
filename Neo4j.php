@@ -130,7 +130,7 @@ class Neo4j implements IndexInterface, ServiceInterface
         $this->client->run($cq, [$id]);
     }
 
-    public function edgeDeleted(): void
+    public function edgeDeleted(string $id): void
     {
 
     }
