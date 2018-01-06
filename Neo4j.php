@@ -92,11 +92,11 @@ class Neo4j implements IndexInterface, ServiceInterface
      * @param string $query Cypher query
      * @param array $param Query params. Optional.
      *
-     * @return array
+     * @return mixed In this case, it's
      */
     public function query(string $query, array $params = array()) // : mixed
     {
-        // return $this->searchInIndex($value, $key, $classes);
+        return $this->client->run($query, $params);
     }
 
 
