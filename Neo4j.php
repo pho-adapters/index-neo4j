@@ -53,8 +53,9 @@ class Neo4j implements IndexInterface, ServiceInterface
         $this->kernel = $kernel;
      
         array_unshift($params, "bolt"); // replace redis:// with tcp://
+        $uri = sprintf("bolt://%s", $this->_unparse_url($params));
         $this->client = ClientBuilder::create()
-            ->addConnection('bolt', $this->_unparse_url($params)) 
+            ->addConnection('bolt', $uri) 
             ->build();
         
         // $this->kernel->on('kernel.booted_up', array($this, 'kernelBooted'));
