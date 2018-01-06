@@ -1,2 +1,2 @@
-# janus
-JanusGraph adapter for Pho Networks
+# Neo4J
+Neo4J adapter for Pho Networks
