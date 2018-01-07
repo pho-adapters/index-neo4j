@@ -20,8 +20,8 @@ use GraphAware\Neo4j\Client\ClientBuilder;
 /**
  * Neo4j indexing adapter
  * 
- * Only bolt mode of connection is accepted. Bolt is stateful and binary, 
- * hence more efficient than http.
+ * Bolt mode of connection is recommended. Bolt is stateful and binary, 
+ * hence more efficient than HTTP or HTTPS.
  *
  * @author Emre Sokullu
  */
@@ -56,10 +56,10 @@ class Neo4j implements IndexInterface, ServiceInterface
         $this->kernel = $kernel;
         $this->logger = $kernel->logger();
      
-        array_unshift($params, "bolt"); // replace redis:// with tcp://
-        $uri = sprintf("bolt://%s", $this->_unparse_url($params));
+        //array_unshift($params, "bolt"); // replace redis:// with tcp://
+        //$uri = sprintf("bolt://%s", $this->_unparse_url($params));
         $this->client = ClientBuilder::create()
-            ->addConnection('bolt', $uri) 
+            ->addConnection($params["scheme"], $this->_unparse_url($params)) 
             ->build();
         
         $this->kernel->events()->on('kernel.booted_up', function() {
@@ -72,12 +72,12 @@ class Neo4j implements IndexInterface, ServiceInterface
         $this->kernel->events()->on('graphsystem.touched',  
             function(array $var) {
                 $this->index($var);
-            }
-            )->on('graphsystem.node_deleted',  
+            })
+            ->on('graphsystem.node_deleted',  
             function(string $id) {
                 $this->nodeDeleted($id);
-            }
-            )->on('graphsystem.edge_deleted',  
+            })
+            ->on('graphsystem.edge_deleted',  
             function(string $id) {
                 $this->edgeDeleted($id);
             }
@@ -106,8 +106,7 @@ class Neo4j implements IndexInterface, ServiceInterface
         $query    = isset($parsed_url['query']) ? '?' . $parsed_url['query'] : ''; 
         $fragment = isset($parsed_url['fragment']) ? '#' . $parsed_url['fragment'] : ''; 
         return "$scheme$user$pass$host$port$path$query$fragment"; 
-  } 
-
+    } 
 
     /**
      * Searches through the index with given key and its value.
@@ -135,68 +134,42 @@ class Neo4j implements IndexInterface, ServiceInterface
         return $this->client;
     }
 
-
     public function index(array $entity): void 
     {
         $this->logger->info("Index request received by %s, a %s.", $entity["id"], $entity["label"]);
-        $header = (int) substr($entity["id"],0, 2);
-        if($header<6&&$entity["id"][0]>0) 
+        $header = (int) substr($entity["id"],0, 1);
+        if($header>0 && $header<6) 
         {
+            $this->logger->info("Header qualifies it to be indexed");
             $entity["attributes"]["udid"] = $entity["id"];
             $cq = sprintf("MERGE (n:%s {udid: {udid}}) SET n = {data}", $entity["label"]);
             $this->logger->info(
-                "The query will be as follows; %s with data %s", 
-                $cq, 
-                print_r($entity["attributes"], true)
+                "The query will be as follows; %s with data ", 
+                $cq
+            //    print_r($entity["attributes"], true)
             );
             $result = $this->client->run($cq, [
                 "udid" => $entity["id"],
                 "data" => $entity["attributes"]
             ]);
         }
-    }
-
-    public function _index(\Pho\Lib\Graph\EntityInterface $entity): void 
-    {
-        $this->logger->info("Index request received by %s, a %s.", (string) $entity->id(), $entity->label());
-        if($entity instanceof \Pho\Lib\Graph\NodeInterface) 
-        {
-            $cq = sprintf("MERGE (n:%s {udid: {udid}}) SET n = {data}", $entity->label());
-            $this->logger->info(
-                "The query will be as follows; %s with data %s", 
-                $cq, 
-                print_r($entity->attributes()->toArray(), true)
-            );
-            $result = $this->client->run($cq, [
-                "udid" => (string) $entity->id(),
-                "data" => $entity->attributes()->toArray()
-            ]);
-        }
-        elseif($entity instanceof \Pho\Lib\Graph\EdgeInterface) 
-        {
-            /*
-            $cq = "MERGE (tn {udid: {udid}}) SET n = {data}"; // sprintf();
-            $result = $this->client->run( $cq, [
-                "class" => $entity->label(),
-                "udid" => (string) $entity->id(),
-                "data" => $entity->toArray()
-            ]);
-            */
-        }
-        else {
-          //
-        }
+        $this->logger->info("Moving on");
     }
 
     public function nodeDeleted(string $id): void 
     {
-        $cq = "MATCH (n {udid: {udid}}) DELETE n";
-        $this->client->run($cq, [$id]);
+        $this->logger->info("Node deletion request received by %s.", $id);
+        $cq = "MATCH (n {udid: {udid}}) OPTIONAL MATCH (n)-[e]-()  DELETE e, n";
+        $this->client->run($cq, ["udid"=>$id]);
+        $this->logger->info("Node deleted. Moving on.");
     }
 
     public function edgeDeleted(string $id): void
     {
-
+        $this->logger->info("Edge deletion request received by %s.", $id);
+        $cq = "MATCH ()-[e {udid: {udid}}]-()  DELETE e";
+        $this->client->run($cq, ["udid"=>$id]);
+        $this->logger->info("Edge deleted. Moving on.");
     }
 
 
