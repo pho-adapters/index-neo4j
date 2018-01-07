@@ -118,9 +118,8 @@ class Neo4j implements IndexInterface, ServiceInterface
     {
         if($entity instanceof \Pho\Lib\Graph\NodeInterface) 
         {
-            $cq = "MERGE (n:{class} {udid: {udid}}) SET n = {data}"; // sprintf();
-            $result = $this->client->run( $cq, [
-                "class" => $entity->label(),
+            $cq = sprintf("MERGE (n:%s {udid: {udid}}) SET n = {data}", $entity->label());
+            $result = $this->client->run($cq, [
                 "udid" => (string) $entity->id(),
                 "data" => $entity->toArray()
             ]);
