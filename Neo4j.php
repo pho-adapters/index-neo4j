@@ -40,6 +40,8 @@ class Neo4j implements IndexInterface, ServiceInterface
      */
     protected $client;
 
+    protected $logger;
+
 
     /**
      * Setup function.
@@ -52,6 +54,7 @@ class Neo4j implements IndexInterface, ServiceInterface
     public function __construct(Kernel $kernel, array $params = [])
     {
         $this->kernel = $kernel;
+        $this->logger = $kernel->logger();
      
         array_unshift($params, "bolt"); // replace redis:// with tcp://
         $uri = sprintf("bolt://%s", $this->_unparse_url($params));
@@ -123,6 +126,7 @@ class Neo4j implements IndexInterface, ServiceInterface
 
     public function index(\Pho\Lib\Graph\EntityInterface $entity): void 
     {
+        $this->logger->info("Index request received by %s.", (string) $entity->id());
         if($entity instanceof \Pho\Lib\Graph\NodeInterface) 
         {
             $cq = sprintf("MERGE (n:%s {udid: {udid}}) SET n = {data}", $entity->label());
