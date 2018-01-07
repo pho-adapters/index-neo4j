@@ -99,6 +99,11 @@ class Neo4j implements IndexInterface, ServiceInterface
         return $this->client->run($query, $params);
     }
 
+    public function client(): \GraphAware\Neo4j\Client\Client
+    {
+        return $this->client;
+    }
+
 
     public function index(\Pho\Lib\Graph\EntityInterface $entity): void 
     {
