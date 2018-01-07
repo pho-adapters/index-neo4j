@@ -62,14 +62,26 @@ class Neo4j implements IndexInterface, ServiceInterface
             ->addConnection('bolt', $uri) 
             ->build();
         
-        $this->kernel->events()->on('kernel.booted_up', array($this, 'subscribeGraphsystem'));
+        $this->kernel->events()->on('kernel.booted_up', function() {
+            $this->subscribeGraphsystem();
+        });
     }
 
     protected function subscribeGraphsystem(): void
     {
-        $this->kernel->events()->on('graphsystem.touched', array($this, 'index'));
-        $this->kernel->events()->on('graphsystem.node_deleted', array($this, 'nodeDeleted'));
-        $this->kernel->events()->on('graphsystem.edge_deleted', array($this, 'edgeDeleted'));
+        $this->kernel->events()->on('graphsystem.touched',  
+            function($var) {
+                $this->index($var);
+            }
+            )->on('graphsystem.node_deleted',  
+            function($id) {
+                $this->nodeDeleted($id);
+            }
+            )->on('graphsystem.edge_deleted',  
+            function($id) {
+                $this->edgeDeleted($id);
+            }
+        );
     }
 
     /**
