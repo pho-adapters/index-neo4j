@@ -70,15 +70,15 @@ class Neo4j implements IndexInterface, ServiceInterface
     protected function subscribeGraphsystem(): void
     {
         $this->kernel->events()->on('graphsystem.touched',  
-            function($var) {
+            function(array $var) {
                 $this->index($var);
             }
             )->on('graphsystem.node_deleted',  
-            function($id) {
+            function(string $id) {
                 $this->nodeDeleted($id);
             }
             )->on('graphsystem.edge_deleted',  
-            function($id) {
+            function(string $id) {
                 $this->edgeDeleted($id);
             }
         );
@@ -136,13 +136,36 @@ class Neo4j implements IndexInterface, ServiceInterface
     }
 
 
-    public function index(\Pho\Lib\Graph\EntityInterface $entity): void 
+    public function index(array $entity): void 
+    {
+        $this->logger->info("Index request received by %s, a %s.", $entity["id"], $entity["label"]);
+        $header = (int) $entity["id"][0];
+        if($header<6&&$entity["id"][0]>0) 
+        {
+            $cq = sprintf("MERGE (n:%s {udid: {udid}}) SET n = {data}", $entity["label"]);
+            $this->logger->info(
+                "The query will be as follows; %s with data %s", 
+                $cq, 
+                print_r($entity["attributes"], true)
+            );
+            $result = $this->client->run($cq, [
+                "udid" => $entity["id"],
+                "data" => $entity["attributes"]
+            ]);
+        }
+    }
+
+    public function _index(\Pho\Lib\Graph\EntityInterface $entity): void 
     {
         $this->logger->info("Index request received by %s, a %s.", (string) $entity->id(), $entity->label());
         if($entity instanceof \Pho\Lib\Graph\NodeInterface) 
         {
             $cq = sprintf("MERGE (n:%s {udid: {udid}}) SET n = {data}", $entity->label());
-            $this->logger->info("The query will be as follows; %s with data %s", $cq, print_r($entity->attributes()->toArray(), true));
+            $this->logger->info(
+                "The query will be as follows; %s with data %s", 
+                $cq, 
+                print_r($entity->attributes()->toArray(), true)
+            );
             $result = $this->client->run($cq, [
                 "udid" => (string) $entity->id(),
                 "data" => $entity->attributes()->toArray()
