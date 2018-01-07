@@ -138,10 +138,11 @@ class Neo4j implements IndexInterface, ServiceInterface
 
     public function index(\Pho\Lib\Graph\EntityInterface $entity): void 
     {
-        $this->logger->info("Index request received by %s.", (string) $entity->id());
+        $this->logger->info("Index request received by %s, a %s.", (string) $entity->id(), $entity->label());
         if($entity instanceof \Pho\Lib\Graph\NodeInterface) 
         {
             $cq = sprintf("MERGE (n:%s {udid: {udid}}) SET n = {data}", $entity->label());
+            $this->logger->info("The query will be as follows; %s with data %s", $cq, print_r($entity->attributes()->toArray(), true));
             $result = $this->client->run($cq, [
                 "udid" => (string) $entity->id(),
                 "data" => $entity->attributes()->toArray()
@@ -149,12 +150,14 @@ class Neo4j implements IndexInterface, ServiceInterface
         }
         elseif($entity instanceof \Pho\Lib\Graph\EdgeInterface) 
         {
+            /*
             $cq = "MERGE (tn {udid: {udid}}) SET n = {data}"; // sprintf();
             $result = $this->client->run( $cq, [
                 "class" => $entity->label(),
                 "udid" => (string) $entity->id(),
                 "data" => $entity->toArray()
             ]);
+            */
         }
         else {
           //
