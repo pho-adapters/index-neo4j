@@ -142,6 +142,7 @@ class Neo4j implements IndexInterface, ServiceInterface
         $header = (int) substr($entity["id"],0, 2);
         if($header<6&&$entity["id"][0]>0) 
         {
+            $entity["attributes"]["udid"] = $entity["id"];
             $cq = sprintf("MERGE (n:%s {udid: {udid}}) SET n = {data}", $entity["label"]);
             $this->logger->info(
                 "The query will be as follows; %s with data %s", 
