@@ -139,7 +139,7 @@ class Neo4j implements IndexInterface, ServiceInterface
     public function index(array $entity): void 
     {
         $this->logger->info("Index request received by %s, a %s.", $entity["id"], $entity["label"]);
-        $header = (int) $entity["id"][0];
+        $header = (int) substr($entity["id"],0, 2);
         if($header<6&&$entity["id"][0]>0) 
         {
             $cq = sprintf("MERGE (n:%s {udid: {udid}}) SET n = {data}", $entity["label"]);
