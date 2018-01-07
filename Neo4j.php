@@ -113,7 +113,7 @@ class Neo4j implements IndexInterface, ServiceInterface
     {
         $this->logger->info("Index request received by %s, a %s.", $entity["id"], $entity["label"]);
         $header = (int) substr($entity["id"],0, 1);
-        if($header>0 && $header<6) 
+        if($header>0 && $header<6) /// node
         {
             //$this->logger->info("Header qualifies it to be indexed");
             $entity["attributes"]["udid"] = $entity["id"];
@@ -124,6 +124,18 @@ class Neo4j implements IndexInterface, ServiceInterface
             //    print_r($entity["attributes"], true)
             );
             $result = $this->client->run($cq, [
+                "udid" => $entity["id"],
+                "data" => $entity["attributes"]
+            ]);
+        }
+        elseif($header>=6 /* $header < 11 */)  // edge
+        {
+            //$tail_id = $entity[]
+            $entity["attributes"]["udid"] = $entity["id"];
+            $cq = sprintf("MATCH(t {udid: {tail}}), (h {udid: {head}}) MERGE (t)-[e:%s {udid: {udid}}]->(h) SET e = {data}", $entity["label"]);
+            $result = $this->client->run($cq, [
+                "tail" => $entity["tail"],
+                "head" => $entity["head"],
                 "udid" => $entity["id"],
                 "data" => $entity["attributes"]
             ]);
