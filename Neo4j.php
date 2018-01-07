@@ -115,7 +115,7 @@ class Neo4j implements IndexInterface, ServiceInterface
         $header = (int) substr($entity["id"],0, 1);
         if($header>0 && $header<6) 
         {
-            $this->logger->info("Header qualifies it to be indexed");
+            //$this->logger->info("Header qualifies it to be indexed");
             $entity["attributes"]["udid"] = $entity["id"];
             $cq = sprintf("MERGE (n:%s {udid: {udid}}) SET n = {data}", $entity["label"]);
             $this->logger->info(
@@ -145,6 +145,12 @@ class Neo4j implements IndexInterface, ServiceInterface
         $cq = "MATCH ()-[e {udid: {udid}}]-()  DELETE e";
         $this->client->run($cq, ["udid"=>$id]);
         $this->logger->info("Edge deleted. Moving on.");
+    }
+
+    public function flush(): void
+    {
+        $cq = "MATCH (n) OPTIONAL MATCH (n)-[e]-() DELETE e, n;";
+        $this->client->run($cq);
     }
 
 
