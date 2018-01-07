@@ -28,9 +28,6 @@ use GraphAware\Neo4j\Client\ClientBuilder;
 class Neo4j implements IndexInterface, ServiceInterface
 {
 
-
-    public $uri;
-
      /**
      * Pho-kernel 
      * @var \Pimple
@@ -58,7 +55,6 @@ class Neo4j implements IndexInterface, ServiceInterface
      
         array_unshift($params, "bolt"); // replace redis:// with tcp://
         $uri = sprintf("bolt://%s", $this->_unparse_url($params));
-        $this->uri = $uri;
         $this->client = ClientBuilder::create()
             ->addConnection('bolt', $uri) 
             ->build();
@@ -104,6 +100,14 @@ class Neo4j implements IndexInterface, ServiceInterface
         return $this->client->run($query, $params);
     }
 
+    /**
+     * Direct access to the Neo4J client
+     * 
+     * This class does also provide direct read-only access to the 
+     * client, for debugging purposes.
+     *
+     * @return \GraphAware\Neo4j\Client\Client
+     */
     public function client(): \GraphAware\Neo4j\Client\Client
     {
         return $this->client;
