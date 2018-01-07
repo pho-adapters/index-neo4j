@@ -51,13 +51,14 @@ class Neo4j implements IndexInterface, ServiceInterface
      * @param Kernel $kernel Kernel of pho
      * @param array  $params Sended params to the index.
      */
-    public function __construct(Kernel $kernel, array $params = [])
+    public function __construct(Kernel $kernel, string $uri = "")
     {
         $this->kernel = $kernel;
         $this->logger = $kernel->logger();
      
+        $params = parse_url($uri);
         $this->client = ClientBuilder::create()
-            ->addConnection($params["scheme"], $this->_unparse_url($params)) 
+            ->addConnection($params["scheme"], $uri) 
             ->build();
         
         $this->kernel->events()->on('kernel.booted_up', function() {
@@ -81,30 +82,6 @@ class Neo4j implements IndexInterface, ServiceInterface
             }
         );
     }
-
-    /**
-     * Helper method to form a URL 
-     *
-     * Does the exact opposite of PHP's parse_url function.
-     * 
-     * @see http://php.net/manual/en/function.parse-url.php#106731 for original snippet
-     * 
-     * @param array $parsed_url
-     * @return string
-     */
-    private function _unparse_url(array $parsed_url): string 
-    { 
-        $scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : ''; 
-        $host     = isset($parsed_url['host']) ? $parsed_url['host'] : ''; 
-        $port     = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : ''; 
-        $user     = isset($parsed_url['user']) ? $parsed_url['user'] : ''; 
-        $pass     = isset($parsed_url['pass']) ? ':' . $parsed_url['pass']  : ''; 
-        $pass     = ($user || $pass) ? "$pass@" : ''; 
-        $path     = isset($parsed_url['path']) ? $parsed_url['path'] : ''; 
-        $query    = isset($parsed_url['query']) ? '?' . $parsed_url['query'] : ''; 
-        $fragment = isset($parsed_url['fragment']) ? '#' . $parsed_url['fragment'] : ''; 
-        return "$scheme$user$pass$host$port$path$query$fragment"; 
-    } 
 
     /**
      * Searches through the index with given key and its value.
