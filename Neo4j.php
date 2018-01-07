@@ -27,6 +27,10 @@ use GraphAware\Neo4j\Client\ClientBuilder;
  */
 class Neo4j implements IndexInterface, ServiceInterface
 {
+
+
+    public $uri;
+
      /**
      * Pho-kernel 
      * @var \Pimple
@@ -54,6 +58,7 @@ class Neo4j implements IndexInterface, ServiceInterface
      
         array_unshift($params, "bolt"); // replace redis:// with tcp://
         $uri = sprintf("bolt://%s", $this->_unparse_url($params));
+        $this->uri = $uri;
         $this->client = ClientBuilder::create()
             ->addConnection('bolt', $uri) 
             ->build();
