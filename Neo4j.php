@@ -116,7 +116,7 @@ class Neo4j implements IndexInterface, ServiceInterface
      */
     public function index(array $entity): void 
     {
-        $this->kernel->logger->info("Index request received by %s, a %s.", $entity["id"], $entity["label"]);
+        $this->kernel->logger()->info("Index request received by %s, a %s.", $entity["id"], $entity["label"]);
         $header = (int) hexdec($entity["id"][0]);
         if($header>0 && $header<6) /// node
         {
@@ -129,7 +129,7 @@ class Neo4j implements IndexInterface, ServiceInterface
         else {
             throw new \Exception(sprintf("Unrecognized entity type with header %s", $entity["id"][0]));
         }
-        $this->kernel->logger->info("Moving on");
+        $this->kernel->logger()->info("Moving on");
     }
 
     /**
@@ -141,10 +141,10 @@ class Neo4j implements IndexInterface, ServiceInterface
      */
     protected function indexNode(array $entity): void
     {
-        //$this->kernel->logger->info("Header qualifies it to be indexed");
+        //$this->kernel->logger()->info("Header qualifies it to be indexed");
         $entity["attributes"]["udid"] = $entity["id"];
         $cq = sprintf("MERGE (n:%s {udid: {udid}}) SET n = {data}", $entity["label"]);
-        $this->kernel->logger->info(
+        $this->kernel->logger()->info(
             "The query will be as follows; %s with data ", 
             $cq
         //    print_r($entity["attributes"], true)
@@ -180,10 +180,10 @@ class Neo4j implements IndexInterface, ServiceInterface
      */
     public function nodeDeleted(string $id): void 
     {
-        $this->kernel->logger->info("Node deletion request received by %s.", $id);
+        $this->kernel->logger()->info("Node deletion request received by %s.", $id);
         $cq = "MATCH (n {udid: {udid}}) OPTIONAL MATCH (n)-[e]-()  DELETE e, n";
         $this->client->run($cq, ["udid"=>$id]);
-        $this->kernel->logger->info("Node deleted. Moving on.");
+        $this->kernel->logger()->info("Node deleted. Moving on.");
     }
 
     /**
@@ -191,10 +191,10 @@ class Neo4j implements IndexInterface, ServiceInterface
      */
     public function edgeDeleted(string $id): void
     {
-        $this->kernel->logger->info("Edge deletion request received by %s.", $id);
+        $this->kernel->logger()->info("Edge deletion request received by %s.", $id);
         $cq = "MATCH ()-[e {udid: {udid}}]-()  DELETE e";
         $this->client->run($cq, ["udid"=>$id]);
-        $this->kernel->logger->info("Edge deleted. Moving on.");
+        $this->kernel->logger()->info("Edge deleted. Moving on.");
     }
 
     /**
