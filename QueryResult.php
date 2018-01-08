@@ -23,7 +23,7 @@ class QueryResult extends \Pho\Kernel\Services\Index\QueryResult
      *
      * @param  $results
      */
-     public function __construct(\GraphAware\Neo4j\Client\Formatter\Result $results)
+     public function __construct($results)
      {
         foreach($results->records() as $result) // $result would be a \GraphAware\Bolt\Result\Result 
         {
