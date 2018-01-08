@@ -30,7 +30,7 @@ class Neo4j implements IndexInterface, ServiceInterface
 
      /**
      * Pho-kernel 
-     * @var \Pimple
+     * @var Kernel
      */
     protected $kernel;
 
@@ -40,21 +40,18 @@ class Neo4j implements IndexInterface, ServiceInterface
      */
     protected $client;
 
-    protected $logger;
-
 
     /**
-     * Setup function.
-     * Init neo4j connection. Run indexing on kernel signals.
-     * Only neo4j bolt connection is accepted.
+     * Constructor.
      * 
-     * @param Kernel $kernel Kernel of pho
-     * @param array  $params Sended params to the index.
+     * Initializes neo4j connection. Runs indexing on kernel signals.
+     * 
+     * @param Kernel $kernel Pho Kernel
+     * @param string $uri Connection details for the Neo4J server
      */
     public function __construct(Kernel $kernel, string $uri = "")
     {
         $this->kernel = $kernel;
-        $this->logger = $kernel->logger();
      
         $params = parse_url($uri);
         $this->client = ClientBuilder::create()
@@ -66,6 +63,14 @@ class Neo4j implements IndexInterface, ServiceInterface
         });
     }
 
+    /**
+     * Listener for kernel events
+     * 
+     * Interfaces graphsystem and indexes
+     * in every touch or delete operation.
+     * 
+     * @return void
+     */
     protected function subscribeGraphsystem(): void
     {
         $this->kernel->events()->on('graphsystem.touched',  
@@ -84,16 +89,12 @@ class Neo4j implements IndexInterface, ServiceInterface
     }
 
     /**
-     * Searches through the index with given key and its value.
-     *
-     * @param string $query Cypher query
-     * @param array $param Query params. Optional.
-     *
-     * @return mixed In this case, it's
+     * {@inheritDoc}
      */
     public function query(string $query, array $params = array()) // : mixed
     {
-        return $this->client->run($query, $params);
+        $res = $this->client->run($query, $params);
+        
     }
 
     /**
@@ -109,56 +110,95 @@ class Neo4j implements IndexInterface, ServiceInterface
         return $this->client;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function index(array $entity): void 
     {
-        $this->logger->info("Index request received by %s, a %s.", $entity["id"], $entity["label"]);
-        $header = (int) substr($entity["id"],0, 1);
+        $this->kernel->logger->info("Index request received by %s, a %s.", $entity["id"], $entity["label"]);
+        $header = (int) hexdec($entity["id"][0]);
         if($header>0 && $header<6) /// node
         {
-            //$this->logger->info("Header qualifies it to be indexed");
-            $entity["attributes"]["udid"] = $entity["id"];
-            $cq = sprintf("MERGE (n:%s {udid: {udid}}) SET n = {data}", $entity["label"]);
-            $this->logger->info(
-                "The query will be as follows; %s with data ", 
-                $cq
-            //    print_r($entity["attributes"], true)
-            );
-            $result = $this->client->run($cq, [
-                "udid" => $entity["id"],
-                "data" => $entity["attributes"]
-            ]);
+            $this->indexNode($entity);
         }
-        elseif($header>=6 /* $header < 11 */)  // edge
+        elseif($header>=6 &&  $header < 11 )  // edge
         {
-            //$tail_id = $entity[]
-            $entity["attributes"]["udid"] = $entity["id"];
-            $cq = sprintf("MATCH(t {udid: {tail}}), (h {udid: {head}}) MERGE (t)-[e:%s {udid: {udid}}]->(h) SET e = {data}", $entity["label"]);
-            $result = $this->client->run($cq, [
-                "tail" => $entity["tail"],
-                "head" => $entity["head"],
-                "udid" => $entity["id"],
-                "data" => $entity["attributes"]
-            ]);
+            $this->indexEdge($entity);
         }
-        $this->logger->info("Moving on");
+        else {
+            throw new \Exception(sprintf("Unrecognized entity type with header %s", $entity["id"][0]));
+        }
+        $this->kernel->logger->info("Moving on");
     }
 
+    /**
+     * Indexes a node
+     *
+     * @param array $entity In array form.
+     * 
+     * @return void
+     */
+    protected function indexNode(array $entity): void
+    {
+        //$this->kernel->logger->info("Header qualifies it to be indexed");
+        $entity["attributes"]["udid"] = $entity["id"];
+        $cq = sprintf("MERGE (n:%s {udid: {udid}}) SET n = {data}", $entity["label"]);
+        $this->kernel->logger->info(
+            "The query will be as follows; %s with data ", 
+            $cq
+        //    print_r($entity["attributes"], true)
+        );
+        $result = $this->client->run($cq, [
+            "udid" => $entity["id"],
+            "data" => $entity["attributes"]
+        ]);
+    }
+
+    /**
+     * Indexes an edge
+     *
+     * @param array $entity In array form.
+     * 
+     * @return void
+     */
+    protected function indexEdge(array $entity): void
+    {
+        //$tail_id = $entity[]
+        $entity["attributes"]["udid"] = $entity["id"];
+        $cq = sprintf("MATCH(t {udid: {tail}}), (h {udid: {head}}) MERGE (t)-[e:%s {udid: {udid}}]->(h) SET e = {data}", $entity["label"]);
+        $result = $this->client->run($cq, [
+            "tail" => $entity["tail"],
+            "head" => $entity["head"],
+            "udid" => $entity["id"],
+            "data" => $entity["attributes"]
+        ]);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function nodeDeleted(string $id): void 
     {
-        $this->logger->info("Node deletion request received by %s.", $id);
+        $this->kernel->logger->info("Node deletion request received by %s.", $id);
         $cq = "MATCH (n {udid: {udid}}) OPTIONAL MATCH (n)-[e]-()  DELETE e, n";
         $this->client->run($cq, ["udid"=>$id]);
-        $this->logger->info("Node deleted. Moving on.");
+        $this->kernel->logger->info("Node deleted. Moving on.");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function edgeDeleted(string $id): void
     {
-        $this->logger->info("Edge deletion request received by %s.", $id);
+        $this->kernel->logger->info("Edge deletion request received by %s.", $id);
         $cq = "MATCH ()-[e {udid: {udid}}]-()  DELETE e";
         $this->client->run($cq, ["udid"=>$id]);
-        $this->logger->info("Edge deleted. Moving on.");
+        $this->kernel->logger->info("Edge deleted. Moving on.");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function flush(): void
     {
         $cq = "MATCH (n) OPTIONAL MATCH (n)-[e]-() DELETE e, n;";
