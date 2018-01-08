@@ -94,7 +94,7 @@ class Neo4j implements IndexInterface, ServiceInterface
     public function query(string $query, array $params = array()): QueryResult
     {
         $result = $this->client->run($query, $params);
-        $qr = QueryResult::process($result);
+        $qr = new QueryResult($result);
         return $qr;
     }
 

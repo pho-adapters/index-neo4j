@@ -18,20 +18,23 @@ namespace Pho\Kernel\Services\Index\Adapters;
  */
 class QueryResult extends \Pho\Kernel\Services\Index\QueryResult 
 {
-     public static function process($results): QueryResult
+    /**
+     * Constructor
+     *
+     * @param  $results
+     */
+     public function __construct(array $results)
      {
-        $qr = new QueryResult();
         foreach($results->records() as $result) // $result would be a \GraphAware\Bolt\Result\Result 
         {
-            $qr->results[] = $result->values()[0]->values();
+            $this->results[] = $result->values()[0]->values();
         }
         $stats = $results->summarize()->updateStatistics();
-        $qr->summary["nodesCreated"] = $stats->nodesCreated();
-        $qr->summary["nodesDeleted"] = $stats->nodesDeleted();
-        $qr->summary["edgesCreated"] = $stats->relationshipsCreated();
-        $qr->summary["edgesDeleted"] = $stats->relationshipsDeleted();
-        $qr->summary["propertiesSet"] = $stats->propertiesSet();
-        $qr->summary["containsUpdates"] = $stats->containsUpdates();
-        return $qr;
+        $this->summary["nodesCreated"] = $stats->nodesCreated();
+        $this->summary["nodesDeleted"] = $stats->nodesDeleted();
+        $this->summary["edgesCreated"] = $stats->relationshipsCreated();
+        $this->summary["edgesDeleted"] = $stats->relationshipsDeleted();
+        $this->summary["propertiesSet"] = $stats->propertiesSet();
+        $this->summary["containsUpdates"] = $stats->containsUpdates();
      }
 }
