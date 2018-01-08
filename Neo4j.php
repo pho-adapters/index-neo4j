@@ -58,9 +58,7 @@ class Neo4j implements IndexInterface, ServiceInterface
             ->addConnection($params["scheme"], $uri) 
             ->build();
         
-        $this->kernel->events()->on('kernel.booted_up', function() {
-            $this->subscribeGraphsystem();
-        });
+        $this->subscribeGraphsystem();
     }
 
     /**
