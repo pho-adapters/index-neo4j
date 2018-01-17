@@ -217,5 +217,11 @@ class Neo4j implements IndexInterface, ServiceInterface
         $this->client->run($cq);
     }
 
+    public function createIndex(string $label, string $field_name): void
+    {
+       $cq = sprintf("CREATE INDEX ON :%s(%s)", $label, $field_name);
+       $this->client->run($cq);
+    }
+ 
 
 }
