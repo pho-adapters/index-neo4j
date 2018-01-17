@@ -103,8 +103,8 @@ class Neo4j implements IndexInterface, ServiceInterface
    public function checkNodeUniqueness(string $field_name, /*mixed*/ $field_value, string $label = ""): bool
    {
       if(!empty($label))
-        $label = sprintf(":%s ", $label);
-      $cypher = sprintf("MATCH(%s{%s: {%s}})", $label, $field_name, $field_name);
+        $label = sprintf(":%s", $label);
+      $cypher = sprintf("MATCH(n%s {%s: {%s}}) RETURN n", $label, $field_name, $field_name);
       $res = $this->query($cypher, [$field_name => $field_value]);   
       return (count($res->results()) == 0); // that means it's unique
    }
