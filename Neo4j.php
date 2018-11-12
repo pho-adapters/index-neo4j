@@ -194,7 +194,7 @@ class Neo4j implements IndexInterface, ServiceInterface
         $this->kernel->logger()->info("Node deletion request received by %s.", $id);
         $cq = "MATCH (n {udid: {udid}}) OPTIONAL MATCH (n)-[e]-()  DELETE e, n";
         $this->client->run($cq, ["udid"=>$id]);
-        $this->kernel->logger()->info("Node deleted. Moving on.");
+        $this->kernel->logger()->info("Node deleted. Moving on. Neo4J");
     }
 
     /**
@@ -205,7 +205,7 @@ class Neo4j implements IndexInterface, ServiceInterface
         $this->kernel->logger()->info("Edge deletion request received by %s.", $id);
         $cq = "MATCH ()-[e {udid: {udid}}]-()  DELETE e";
         $this->client->run($cq, ["udid"=>$id]);
-        $this->kernel->logger()->info("Edge deleted. Moving on.");
+        $this->kernel->logger()->info("Edge deleted. Moving on. Neo4J");
     }
 
     /**
