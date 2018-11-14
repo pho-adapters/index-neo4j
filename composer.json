@@ -13,7 +13,8 @@
     ],
     "require": {
         "php":"^7.1",
-        "graphaware/neo4j-php-client": "^4.0"
+        "graphaware/neo4j-php-client": "^4.0",
+    "psy/psysh": "^0.9.9"
     },
     "provide": {
         "phonetworks/service-index-implementation": "1.0"
