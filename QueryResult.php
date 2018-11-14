@@ -12,7 +12,9 @@
 namespace Pho\Kernel\Services\Index\Adapters;
 
 use GraphAware\Bolt\Result\Type\Node;
+use GraphAware\Neo4j\Client\Formatter\Type\Node2;
 use GraphAware\Bolt\Result\Type\Relationship;
+use GraphAware\Neo4j\Client\Formatter\Type\Relationship2;
 
 /**
  * Neo4j adapter for Kernel's QueryResult class.
@@ -37,7 +39,10 @@ class QueryResult extends \Pho\Kernel\Services\Index\QueryResult
             $keys = $result->keys();
             $values = $result->values();
             foreach($values as $k=>$value) {
-                if($value instanceof Node || $value instanceof Relationship) { // if $value->values() then it's like n
+                if( 
+                    $value instanceof Node || $value instanceof Node2 
+                    || $value instanceof Relationship || $value instanceof Relationship2 
+                ) { // if $value->values() then it's like n
                     $_ = $value->values();
                     foreach($_ as $old_key=>$v) {
                         $new_key = $keys[$k].".".$old_key;
