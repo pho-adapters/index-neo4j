@@ -25,6 +25,9 @@ class QueryResult extends \Pho\Kernel\Services\Index\QueryResult
      */
      public function __construct($results)
      {
+         error_log("Neo4J QueryResult executing");
+         error_log("Resuts is a: ".get_class($results));
+         error_log("Resuts are: ".print_r($results, true));
         foreach($results->records() as $result) // $result would be a \GraphAware\Bolt\Result\Result 
         {
             $this->results[] = $result->values()[0]->values();
