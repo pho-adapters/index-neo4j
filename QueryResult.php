@@ -12,9 +12,9 @@
 namespace Pho\Kernel\Services\Index\Adapters;
 
 use GraphAware\Bolt\Result\Type\Node;
-use GraphAware\Neo4j\Client\Formatter\Type\Node2;
+use GraphAware\Neo4j\Client\Formatter\Type\Node as Node2;
 use GraphAware\Bolt\Result\Type\Relationship;
-use GraphAware\Neo4j\Client\Formatter\Type\Relationship2;
+use GraphAware\Neo4j\Client\Formatter\Type\Relationship as Relationship2;
 
 /**
  * Neo4j adapter for Kernel's QueryResult class.
