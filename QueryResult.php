@@ -27,9 +27,9 @@ class QueryResult extends \Pho\Kernel\Services\Index\QueryResult
      */
      public function __construct($results)
      {
-         error_log("Neo4J QueryResult executing");
-         error_log("Resuts is a: ".get_class($results));
-         error_log("Resuts are: ".print_r($results->records(), true));
+         //error_log("Neo4J QueryResult executing");
+         //error_log("Resuts is a: ".get_class($results));
+         //error_log("Resuts are: ".print_r($results->records(), true));
          $i = 0;
         foreach($results->records() as $result) // $result would be a \GraphAware\Bolt\Result\Result 
         {
@@ -47,9 +47,8 @@ class QueryResult extends \Pho\Kernel\Services\Index\QueryResult
                 else { // otherwise it's like n.something as Something
                     $this->results[$i][($keys[$k])] = $value;
                 }
-                $i++;
             }
-            
+            $i++;
         }
         $stats = $results->summarize()->updateStatistics();
          if(!is_null($stats)) {
@@ -66,7 +65,7 @@ class QueryResult extends \Pho\Kernel\Services\Index\QueryResult
             $this->summary["edgesCreated"] = 0;
             $this->summary["edgesDeleted"] = 0;
             $this->summary["propertiesSet"] =0;
-            $this->summary["containsUpdates"] = false;
+            $this->summary["containsUpdates"] = 0;
          }
      }
 }
